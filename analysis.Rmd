@@ -1,0 +1,63 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,fig.height = 10,fig.width = 10)
+```
+
+
+```{r cars}
+dat <- read.csv('Home Temps - Sheet1.csv')
+str(dat)
+```
+
+```{r,fig.height=12}
+library(ggplot2)
+suppressPackageStartupMessages(library(dplyr))
+library(lubridate)
+dat$Date <- ymd(dat$Date)
+dat <- dat %>% mutate(hours=hour+(minutes/60))
+dat$date_time <- lubridate::fast_strptime(paste(dat$Date, dat$Time),format = '%Y-%m-%d %H:%M')
+dat$date_time <- as.POSIXct(dat$date_time)
+
+```
+
+# Plot all temps vs hour
+```{r,fig.height=10,fig.width=10}
+dat %>% ggplot(aes(hours,Temp_indoor,group=as.factor(Date)))+
+  geom_jitter(aes(col=as.factor(Date)),size=4)+
+  xlab('Hour of Day')
+```
+
+# Look at each day individually
+```{r}
+dat %>% filter(!is.na(Date)) %>% 
+  ggplot(aes(hours,Temp_indoor))+
+  geom_point()+
+  geom_line()+
+  geom_smooth()+
+  facet_wrap(~Date)+
+  xlab('Hour of Day')
+```
+
+
+# Look at a single day
+```{r,fig.width=14}
+#dat$times <- as.POSIXct(strptime(paste( dat$hour,dat$minutes),format = '%H %M'))
+
+dat %>% filter(Date=='2018-02-02') %>% ggplot(aes(date_time,Temp_indoor))+geom_point() + geom_smooth()
+```
+
+```{r}
+dat %>% ggplot(aes(hours,Temp_outdoor_app,group=as.factor(Date)))+geom_point(aes(col=as.factor(Date)))
+```
+
+
+```{r}
+dat %>% ggplot(aes(Temp_outdoor_app,temp_outdoor_google_80401))+
+  geom_point()+
+  geom_abline(slope=1)
+```
+
